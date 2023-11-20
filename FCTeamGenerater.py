@@ -2,6 +2,7 @@ import pandas as pd
 import re
 SignInPlayerList = "H:/PyProjects/NVFC/SignInPlayers.txt"
 SquadDataBase = "H:/PyProjects/NVFC/SquadDataBase.xlsx"
+SquadMaxPlayerNum = 8
 
 PlayerDict = {}
 PlayerNameToID = {}
@@ -11,7 +12,7 @@ CF = ['CF']
 MF = ['MF', 'DMF', "CM"]
 CB = ['CB']
 LRB = ['LB', 'RB']
-LRM = ['LM', 'RM']
+LRM = ['LM', 'RM', 'RMF', 'LMF']
 Unknown = ['Unknown']
 
 SignInCFs= []
@@ -43,6 +44,9 @@ class Squad(object):
         self.PlayerCount += 1
         self.PlayerList.append(player)
 
+    def __lt__(self, other):
+        return self.TotalCapability < other.TotalCapability
+
 
 
 class Player(object):
@@ -53,7 +57,7 @@ class Player(object):
         self.Capability = Capability
 
     def __lt__(self, other):
-        return self.Capability < other.Capability
+        return self.Capability > other.Capability
 
 
 def InitPlayerDataBase():
@@ -80,12 +84,13 @@ def InitSignInPlayerDataBase():
                print("warning : player ", name, "is not registered in player database will use default value 1")
             SignInPlayers.append(player)
 
-def SortAndMoveExtraPlayers(PlayerList, ExtraPlayerList):
+def SortAndMoveExtraPlayers(PlayerList, ExtraPlayerList, SquadNum):
     PlayerList.sort()
-    if len(PlayerList) % 2 == 1:
+    popNum = len(PlayerList) % SquadNum
+    for i in range(0, popNum):
         ExtraPlayerList.append(PlayerList.pop())
 
-def ClassifyPlayers():
+def ClassifyPlayers(SquadNum):
     for player in SignInPlayers:
         if player.Position in CF:
             SignInCFs.append(player)
@@ -102,45 +107,46 @@ def ClassifyPlayers():
         else:
             print("Fatal error !!! :No avaliable position for", player.Position, " of ", player.Name)
 
-    SortAndMoveExtraPlayers(SignInCFs, SignInUnknowns)
-    SortAndMoveExtraPlayers(SignInMFs, SignInUnknowns)
-    SortAndMoveExtraPlayers(SignInCBs, SignInUnknowns)
-    SortAndMoveExtraPlayers(SignInLRBs, SignInUnknowns)
-    SortAndMoveExtraPlayers(SignInLRMs, SignInUnknowns)
+    SortAndMoveExtraPlayers(SignInCFs, SignInUnknowns, SquadNum)
+    SortAndMoveExtraPlayers(SignInMFs, SignInUnknowns, SquadNum)
+    SortAndMoveExtraPlayers(SignInCBs, SignInUnknowns, SquadNum)
+    SortAndMoveExtraPlayers(SignInLRBs, SignInUnknowns, SquadNum)
+    SortAndMoveExtraPlayers(SignInLRMs, SignInUnknowns, SquadNum)
     SignInUnknowns.sort()
 
-def AssignToSquad(SquadA, SquadB, PlayerList):
-    if SquadA.TotalCapability > SquadB.TotalCapability:
-        SquadA, SquadB = SquadB, SquadA
+def AssignToSquad(Squads, PlayerList):
+    Squads.sort()
 
-    current = SquadA
+    i = 0
+    currentSquad = Squads[i]
     for player in PlayerList:
-        current.AddPlayer(player)
-        if current is SquadA:
-            current = SquadB
-        else:
-            current = SquadA
+        currentSquad.AddPlayer(player)
+        i = (i+1) % len(Squads)
+        currentSquad = Squads[i]
 
 
-def SquadGenerator():
-    SquadA = Squad("龙队")
-    SquadB = Squad("虎队")
+def SquadGenerator(SquadNum):
 
-    AssignToSquad(SquadA, SquadB, SignInCFs)
-    AssignToSquad(SquadA, SquadB, SignInMFs)
-    AssignToSquad(SquadA, SquadB, SignInCBs)
-    AssignToSquad(SquadA, SquadB, SignInLRBs)
-    AssignToSquad(SquadA, SquadB, SignInLRMs)
-    AssignToSquad(SquadA, SquadB, SignInUnknowns)
-    SquadA.PrintSquad()
-    SquadB.PrintSquad()    
+    Squads = []
+    for i in range(0, SquadNum):
+        Squads.append(Squad(chr(ord('A')+ i)))
+
+    AssignToSquad(Squads, SignInCFs)
+    AssignToSquad(Squads, SignInMFs)
+    AssignToSquad(Squads, SignInCBs)
+    AssignToSquad(Squads, SignInLRBs)
+    AssignToSquad(Squads, SignInLRMs)
+    AssignToSquad(Squads, SignInUnknowns)
+    for i in range(0, SquadNum):
+        Squads[i].PrintSquad()
 
 
 def Main():
     InitPlayerDataBase()
     InitSignInPlayerDataBase()
-    ClassifyPlayers()
-    SquadGenerator()
-
+    SignInPlayerNum = len(SignInPlayers)
+    SquadNum = int((SignInPlayerNum + SquadMaxPlayerNum - 1) / SquadMaxPlayerNum)
+    ClassifyPlayers(SquadNum)
+    SquadGenerator(SquadNum)
 
 Main()
