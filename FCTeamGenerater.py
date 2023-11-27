@@ -22,19 +22,25 @@ SignInLRBs = []
 SignInLRMs = []
 SignInUnknowns = []
 
+Color = ['白', '蓝', '花', '红']
+
 class Squad(object):
 
-    def __init__(self, Name):
-        self.Name = Name
+    instanceCount = 0
+    def __init__(self):
         self.PlayerList = []
         self.TotalCapability = 0
         self.PlayerCount = 0
+        self.Index = Squad.instanceCount
+        self.Name = chr(ord('A')+ self.Index)
+        self.Color = Color[self.Index]
+        Squad.instanceCount += 1
 
     def PrintSquad(self):
-        print("Team", self.Name)
+        print("Team", self.Name, ' 球衣颜色:', self.Color)
         count = 1
         for player in self.PlayerList:
-            print(count, player.Name)
+            print(count, player.Name, player.Capability)
             count += 1
 
         print("Total Capability", self.TotalCapability)
@@ -129,7 +135,7 @@ def SquadGenerator(SquadNum):
 
     Squads = []
     for i in range(0, SquadNum):
-        Squads.append(Squad(chr(ord('A')+ i)))
+        Squads.append(Squad())
 
     AssignToSquad(Squads, SignInCFs)
     AssignToSquad(Squads, SignInMFs)
