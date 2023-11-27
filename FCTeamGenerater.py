@@ -40,7 +40,7 @@ class Squad(object):
         print("Team", self.Name, ' 球衣颜色:', self.Color)
         count = 1
         for player in self.PlayerList:
-            print(count, player.Name, player.Capability)
+            print(count, player.Name, player.Capability, player.Position)
             count += 1
 
         print("Total Capability", self.TotalCapability)
